@@ -1,0 +1,40 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+$theme: mat.define-theme((
+  color: (theme-type: light, primary: mat.$cyan-palette, tertiary: mat.$blue-palette),
+  typography: (brand-family: 'Schibsted Grotesk, system-ui, sans-serif',
+               plain-family: 'Schibsted Grotesk, system-ui, sans-serif'),
+  density: (scale: 0)
+));
+
+html { @include mat.all-component-themes($theme); }
+
+:root {
+  --ink: #10243e;
+  --ink-2: #4a5b70;
+  --paper: #f3f5f8;
+  --surface: #ffffff;
+  --line: #d9dee6;
+  --teal: #0e7c86;
+  --teal-soft: #ddf1f2;
+  --amber-soft: #fbebc8;
+  --amber-ink: #7a4b00;
+  --gray-soft: #e8ebf0;
+  --danger: #b42318;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Schibsted Grotesk', system-ui, sans-serif;
+}
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
