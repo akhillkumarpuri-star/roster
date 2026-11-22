@@ -10,6 +10,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'employees', loadComponent: () => import('./features/employees/employees.component').then((m) => m.EmployeesComponent) },
+      { path: 'report', loadComponent: () => import('./features/report/report.component').then((m) => m.ReportComponent) },
       { path: '', pathMatch: 'full', redirectTo: 'employees' },
     ],
   },

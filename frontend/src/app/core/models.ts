@@ -24,3 +24,14 @@ export const STATUS_LABEL: Record<EmployeeStatus, string> = {
   INACTIVE: 'Inactive',
 };
 export const DEPARTMENTS = ['Engineering', 'Design', 'Product', 'Finance', 'HR', 'Operations', 'Sales'];
+
+export interface DepartmentCount { department: string; count: number; }
+export interface ReportSummary {
+  from: string; // yyyy-MM-dd
+  to: string;
+  total: number;
+  byStatus: Record<EmployeeStatus, number>;
+  byDepartment: DepartmentCount[];
+}
+export interface ReportFilter { from: string; to: string; status: EmployeeStatus | ''; }
+export type SortDir = 'asc' | 'desc';

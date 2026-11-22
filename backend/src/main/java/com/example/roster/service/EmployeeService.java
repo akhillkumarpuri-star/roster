@@ -18,7 +18,7 @@ import java.util.Set;
 @Transactional
 public class EmployeeService {
     // Whitelist: the client can only sort by these properties.
-    private static final Set<String> SORTABLE =
+    static final Set<String> SORTABLE =
             Set.of("firstName", "lastName", "email", "department", "jobTitle", "hireDate", "status");
 
     private final EmployeeRepository repo;

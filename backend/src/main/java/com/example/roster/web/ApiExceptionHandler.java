@@ -27,6 +27,12 @@ public class ApiExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of("message", "The request body is malformed."));
     }
 
+    @ExceptionHandler(ApiExceptions.BadRequest.class)
+    ResponseEntity<Map<String, Object>> badRequest(ApiExceptions.BadRequest ex) {
+        return ResponseEntity.badRequest().body(Map.of("message", ex.getMessage(),
+                "errors", Map.of(ex.getField(), ex.getMessage())));
+    }
+
     @ExceptionHandler(ApiExceptions.NotFound.class)
     ResponseEntity<Map<String, Object>> notFound(ApiExceptions.NotFound ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", ex.getMessage()));

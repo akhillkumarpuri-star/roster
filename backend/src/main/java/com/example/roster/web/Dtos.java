@@ -5,6 +5,7 @@ import com.example.roster.domain.EmployeeStatus;
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 public final class Dtos {
     private Dtos() {}
@@ -36,6 +37,12 @@ public final class Dtos {
                     e.getDepartment(), e.getJobTitle(), e.getHireDate(), e.getStatus());
         }
     }
+
+    public record DepartmentCount(String department, long count) {}
+
+    /** Summary cards for the report: totals for the chosen date range and status filter. */
+    public record ReportSummary(LocalDate from, LocalDate to, long total,
+                                Map<String, Long> byStatus, List<DepartmentCount> byDepartment) {}
 
     public record PageResponse<T>(List<T> content, long totalElements, int page, int size) {}
 }
