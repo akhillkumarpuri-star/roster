@@ -1,12 +1,9 @@
-import { Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../core/auth.service';
-
-const IDLE_MS = 30 * 60 * 1000;
-const WARN_MS = 28 * 60 * 1000;
+import { IdleService } from '../../core/idle.service';
 
 @Component({
   selector: 'app-shell',
@@ -43,36 +40,8 @@ const WARN_MS = 28 * 60 * 1000;
 })
 export class ShellComponent implements OnInit, OnDestroy {
   protected auth = inject(AuthService);
-  private snack = inject(MatSnackBar);
-  private warnTimer?: ReturnType<typeof setTimeout>;
-  private idleTimer?: ReturnType<typeof setTimeout>;
-  private lastReset = 0;
+  private idle = inject(IdleService);
 
-  ngOnInit(): void { this.resetTimers(); }
-  ngOnDestroy(): void { this.clearTimers(); }
-
-  @HostListener('document:click')
-  @HostListener('document:keydown')
-  @HostListener('document:mousemove')
-  onActivity(): void {
-    if (Date.now() - this.lastReset > 1000) this.resetTimers();
-  }
-
-  private resetTimers(): void {
-    this.clearTimers();
-    this.lastReset = Date.now();
-    this.warnTimer = setTimeout(
-      () => this.snack.open('You will be signed out in 2 minutes due to inactivity.', 'Stay signed in', { duration: 120000 }),
-      WARN_MS,
-    );
-    this.idleTimer = setTimeout(() => {
-      this.snack.open('You were signed out after 30 minutes of inactivity.', 'Dismiss', { duration: 8000 });
-      this.auth.logout();
-    }, IDLE_MS);
-  }
-
-  private clearTimers(): void {
-    clearTimeout(this.warnTimer);
-    clearTimeout(this.idleTimer);
-  }
+  ngOnInit(): void { this.idle.start(); }
+  ngOnDestroy(): void { this.idle.stop(); }
 }

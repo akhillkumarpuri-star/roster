@@ -41,7 +41,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ApiExceptions.Conflict.class)
     ResponseEntity<Map<String, Object>> conflict(ApiExceptions.Conflict ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", ex.getMessage(),
-                "errors", Map.of("email", ex.getMessage())));
+                "errors", Map.of(ex.getField(), ex.getMessage())));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

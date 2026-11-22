@@ -40,7 +40,7 @@ public class EmployeeService {
 
     public EmployeeResponse create(EmployeeRequest r) {
         if (repo.existsByEmailIgnoreCase(normalise(r.email()))) {
-            throw new ApiExceptions.Conflict("An employee with this email already exists.");
+            throw new ApiExceptions.Conflict("email", "An employee with this email already exists.");
         }
         Employee e = new Employee();
         apply(e, r);
@@ -50,7 +50,7 @@ public class EmployeeService {
     public EmployeeResponse update(Long id, EmployeeRequest r) {
         Employee e = find(id);
         if (repo.existsByEmailIgnoreCaseAndIdNot(normalise(r.email()), id)) {
-            throw new ApiExceptions.Conflict("An employee with this email already exists.");
+            throw new ApiExceptions.Conflict("email", "An employee with this email already exists.");
         }
         apply(e, r);
         return EmployeeResponse.from(e);
