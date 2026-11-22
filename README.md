@@ -33,6 +33,15 @@ npm start
 Different MySQL credentials? `DB_USER=... DB_PASSWORD=... mvn spring-boot:run`.
 Always set a real `JWT_SECRET` (32+ chars) outside local development.
 
+## Build and run from scratch (Windows PowerShell or any shell)
+1. **Check the tools** (each should print a version): `java -version` (17+), `mvn -v` (3.9+), `node -v` (20+), `npm -v`, and MySQL 8 running on port 3306.
+2. **Backend:** `cd backend`, then `mvn test` (34 tests), then `mvn spring-boot:run`. The first run downloads dependencies and creates the `roster_db` database and the demo data. Wait for `Started RosterApplication`.
+3. **Frontend:** open a second terminal, `cd frontend`, `npm install`, `npm start`. Open http://localhost:4200.
+4. **First-run checks:** log in as `admin` / `Admin@123`; the Employees page shows 13 people; open **Report** and click **All time** to see the cards and the table; try both export buttons.
+5. **Production-style build (optional):** `cd backend && mvn -DskipTests package` makes `target/roster-api-1.0.0.jar` (run it with `java -jar`); `cd frontend && npm run build` makes `dist/roster-web` (this step needs internet to inline the Google font).
+
+Common problems are listed in `BUILD_GUIDE.md`.
+
 ## Demo accounts (seeded on first start)
 | Username | Password | Role | Can do |
 |---|---|---|---|
