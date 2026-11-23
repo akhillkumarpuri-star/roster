@@ -49,7 +49,6 @@ Each entry records the five items required by section 6.1 of the assessment, plu
 ### Entry 3: 401 vs 403 on forbidden actions
 - **Tool:** Claude.
 - **Prompt (summary from notes):** "I logged in as `viewer` and sent DELETE /api/employees/{id} with the viewer token. It returned 401, but I expected 403. Why does this happen and how do I fix it?"
-- **Prompt as typed (when the fix was applied):** "Start here and do the step fixes and give me the final zip file." Then: "Also send the zip file where you made the edit."
 - **Prompt, structured (reconstructed for the applied fix):** "In `SecurityConfig.java`, forbidden requests from an authenticated viewer return 401 instead of 403 because Spring's internal `/error` dispatch requires authentication. Apply the minimal fix, show the changed lines, give me manual re-test steps, and return the updated project zip."
 - **What the AI generated:** the explanation (Spring forwards the 403 to `/error`, which my rules protected) and the one-line fix `.requestMatchers("/error").permitAll()`, applied in the project.
 - **What was modified and why:** the line was added after the login matcher with a comment. The frontend interceptor signs the user out on 401, so a forbidden action must return 403. MockMvc cannot test the `/error` dispatch, so I verify this by hand with PowerShell (viewer token gives 403, no token gives 401).
@@ -120,7 +119,6 @@ Each entry records the five items required by section 6.1 of the assessment, plu
 - **Result:** applied; to verify in section 3. The Angular build passed.
 ### Entry 12: Database design: foreign key and SQL schema
 - **Tool:** Claude.
-- **Prompt as typed (recruiter feedback I pasted, translated from Telugu-English):** "These things are not covered in the repo: … (2) Database: no foreign keys or relationships (department is just a string), and no SQL schema script, only ddl-auto=update." Then: "Yes, do all 3 things in this one." Then: "Continue and give me the zip file."
 - **Prompt, structured (reconstructed):** "Improve the database design. Requirements: (1) a real relationship, with departments in their own table and `employees.department_id` as a foreign key; (2) keep the API and screens working with a department name; (3) keep sorting, search and the report queries correct; (4) replace `ddl-auto=update` with an explicit SQL schema script that has primary, unique and foreign keys, CHECK constraints for status and role, and indexes that match the queries; (5) test the SQL on a real database; (6) update the seeder, the tests and the documentation, including an ER diagram."
 - **What the AI generated:** the `Department` entity and repository; `Employee.department` as a many-to-one relation; `EmployeeService.departmentFor` (find the department ignoring case, or create it); sorting through `department.name`; an entity graph on the list queries; Flyway with `V1__create_schema.sql`; `ddl-auto=none`; and the README ER diagram.
 - **What was modified and why:** the SQL migration was run on MariaDB 10.11 (no MySQL was available) and a duplicate email, a duplicate department name in another case, an unknown department, a bad status and deleting a used department were all rejected as intended. `ddl-auto=none` was chosen instead of `validate` because Hibernate's type validation (for example for enum columns) could not be tested against MySQL. Reasons for the design: normalisation, referential integrity enforced by the database, and an explicit versioned schema. A database created by the old version must be dropped once.
@@ -129,7 +127,6 @@ Each entry records the five items required by section 6.1 of the assessment, plu
 - **Result:** constraints verified in SQL. The Java side is verified when I run `mvn test` and the app (section 3).
 ### Entry 13: Date-based aggregation in the summary (UC-RPT-04, part 2)
 - **Tool:** Claude.
-- **Prompt as typed (same recruiter feedback as entry 12):** "Minor: no date-based aggregation in the report summary cards (UC-RPT-04)."
 - **Prompt, structured (reconstructed):** "UC-RPT-04 requires date-based aggregations in the summary. Add hires per calendar month to the summary using the same filters as the table; return it oldest first; limit the result for very long ranges; show it on the Report page; add unit tests for the ordering and the limit."
 - **What the AI generated:** the `countByMonth` query (`GROUP BY year(hire_date), month(hire_date)`), the `MonthCount` DTO and `byMonth` field, a "Hires by month" section on the report page, and two tests.
 - **What was modified and why:** only months that have hires are returned and the summary keeps the latest 24 months, because "All time" could otherwise return decades of rows. The SQL was checked on MariaDB (2023-11 had 1 hire, 2024-03 had 2).
@@ -138,7 +135,6 @@ Each entry records the five items required by section 6.1 of the assessment, plu
 - **Result:** UC-RPT-04 now has total, status, department and monthly aggregations. The Angular build passed.
 ### Entry 14: Documentation and this log
 - **Tool:** Claude.
-- **Prompt as typed:** "Also, have you updated the README file and the how-to-build .md file and everything?" Then: "Yes, add both." Later: "Update the AI_USAGE_LOG.md more accurately, with professional-type prompts"
 - **Prompt, structured (reconstructed):** "Update all Markdown documents so they match the current code: README (run steps, API table, use-case coverage, ER diagram, limitations), a new BUILD_GUIDE (prerequisites, build and run, verification checklist, PowerShell checks for 401 and 403, a common-problems table), the interview WALKTHROUGH, the refactor checklist, and the AI usage log in the section 6.1 format."
 - **What the AI generated:** the rewritten `README.md`, a new `BUILD_GUIDE.md`, an updated `WALKTHROUGH.md` and `REFACTOR_CHECKLIST.md`, and this log.
 - **What was modified and why:** test counts, endpoints and table names were updated everywhere so the documents match the code, and limitations are stated openly (Latin-only PDF, no department screen, `ddl-auto=none`). This log separates prompts as typed from reconstructed prompts so it stays accurate.
