@@ -130,7 +130,7 @@ class ApiSecurityTest {
     void viewerCanReadReportSummary() throws Exception {
         when(reports.summary(any(), any(), any())).thenReturn(new ReportSummary(
                 LocalDate.of(2024, 1, 1), LocalDate.of(2024, 12, 31), 3,
-                Map.of("ACTIVE", 3L, "ON_LEAVE", 0L, "INACTIVE", 0L), List.of()));
+                Map.of("ACTIVE", 3L, "ON_LEAVE", 0L, "INACTIVE", 0L), List.of(), List.of()));
         mvc.perform(get("/api/reports/employees/summary").header("Authorization", viewer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(3));

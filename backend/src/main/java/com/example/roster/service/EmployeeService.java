@@ -1,6 +1,8 @@
 package com.example.roster.service;
 
+import com.example.roster.domain.Department;
 import com.example.roster.domain.Employee;
+import com.example.roster.repo.DepartmentRepository;
 import com.example.roster.repo.EmployeeRepository;
 import com.example.roster.web.ApiExceptions;
 import com.example.roster.web.Dtos.EmployeeRequest;
@@ -22,14 +24,21 @@ public class EmployeeService {
             Set.of("firstName", "lastName", "email", "department", "jobTitle", "hireDate", "status");
 
     private final EmployeeRepository repo;
+    private final DepartmentRepository departments;
 
-    public EmployeeService(EmployeeRepository repo) { this.repo = repo; }
+    public EmployeeService(EmployeeRepository repo, DepartmentRepository departments) {
+        this.repo = repo;
+        this.departments = departments;
+    }
+
+    /** Maps a whitelisted API sort field to the entity property (department is now a relation). */
+    static String sortProperty(String field) { return "department".equals(field) ? "department.name" : field; }
 
     @Transactional(readOnly = true)
     public PageResponse<EmployeeResponse> list(String q, int page, int size, String sort, String dir) {
         String sortField = SORTABLE.contains(sort) ? sort : "lastName";
         Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50), Sort.by(direction, sortField));
+        var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50), Sort.by(direction, sortProperty(sortField)));
         Page<Employee> result = repo.search(q == null ? "" : q.trim(), pageable);
         return new PageResponse<>(result.getContent().stream().map(EmployeeResponse::from).toList(),
                 result.getTotalElements(), result.getNumber(), result.getSize());
@@ -67,6 +76,12 @@ public class EmployeeService {
 
     private void apply(Employee e, EmployeeRequest r) {
         e.update(r.firstName().trim(), r.lastName().trim(), normalise(r.email()), r.phone().trim(),
-                r.department().trim(), r.jobTitle().trim(), r.hireDate(), r.status());
+                departmentFor(r.department()), r.jobTitle().trim(), r.hireDate(), r.status());
+    }
+
+    /** Finds the department by name (case-insensitive) or creates it, so employees always reference a real row. */
+    private Department departmentFor(String name) {
+        String trimmed = name.trim();
+        return departments.findByNameIgnoreCase(trimmed).orElseGet(() -> departments.save(new Department(trimmed)));
     }
 }

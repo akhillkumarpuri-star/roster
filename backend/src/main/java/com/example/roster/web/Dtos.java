@@ -34,15 +34,19 @@ public final class Dtos {
                                    String department, String jobTitle, LocalDate hireDate, EmployeeStatus status) {
         public static EmployeeResponse from(Employee e) {
             return new EmployeeResponse(e.getId(), e.getFirstName(), e.getLastName(), e.getEmail(), e.getPhone(),
-                    e.getDepartment(), e.getJobTitle(), e.getHireDate(), e.getStatus());
+                    e.getDepartment().getName(), e.getJobTitle(), e.getHireDate(), e.getStatus());
         }
     }
 
     public record DepartmentCount(String department, long count) {}
 
+    /** Hires in one calendar month; {@code month} is "yyyy-MM". */
+    public record MonthCount(String month, long count) {}
+
     /** Summary cards for the report: totals for the chosen date range and status filter. */
     public record ReportSummary(LocalDate from, LocalDate to, long total,
-                                Map<String, Long> byStatus, List<DepartmentCount> byDepartment) {}
+                                Map<String, Long> byStatus, List<DepartmentCount> byDepartment,
+                                List<MonthCount> byMonth) {}
 
     public record PageResponse<T>(List<T> content, long totalElements, int page, int size) {}
 }

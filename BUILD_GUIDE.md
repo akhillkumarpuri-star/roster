@@ -21,12 +21,13 @@ roster-fullstack/
     src/main/java/com/example/roster/
       config/    SecurityConfig
       security/  JwtService, JwtAuthFilter
-      domain/    entities and the status enum
+      domain/    entities (Employee, Department, AppUser) and the status enum
       repo/      Spring Data repositories (search, report queries)
       service/   EmployeeService, ReportService, ExcelReportBuilder, PdfReportBuilder
       web/       controllers, DTOs, exception handling
       seed/      DataSeeder (demo users and employees)
-    src/test/    34 tests
+    src/main/resources/db/migration/   V1__create_schema.sql (the database schema)
+    src/test/    40 tests
   frontend/   Angular 19 app
     src/app/core/      auth, interceptor, guard, API services, idle service, download helper
     src/app/features/  login, shell, employees, report
@@ -34,12 +35,12 @@ roster-fullstack/
 ```
 
 ## 3. Build and run
-**Database.** Either use your own MySQL, or run `docker compose up -d` in the project root. The backend creates the `roster_db` database and its tables on first start.
+**Database.** Either use your own MySQL, or run `docker compose up -d` in the project root. On first start the backend creates the `roster_db` database and Flyway runs `backend/src/main/resources/db/migration/V1__create_schema.sql` (tables, foreign key, constraints, indexes). **If you ran an earlier version of this project, run `DROP DATABASE roster_db;` first**, because that older database was created by Hibernate and Flyway will not use it.
 
 **Backend** (terminal 1):
 ```
 cd backend
-mvn test                  # 34 tests should pass
+mvn test                  # 40 tests should pass
 mvn spring-boot:run       # wait for "Started RosterApplication"
 ```
 Other MySQL login: `DB_USER=myuser DB_PASSWORD=mypass mvn spring-boot:run`
@@ -61,8 +62,8 @@ Run the jar with real secrets: `JWT_SECRET` (32+ characters), `DB_USER`, `DB_PAS
 
 ## 4. Check that everything works
 1. Open http://localhost:4200 and log in as `admin` / `Admin@123`. A wrong password shows a red message.
-2. Employees: 13 rows over 2 pages. Search "eng", sort a column, add, edit and delete an employee. Adding a duplicate email shows an error on the Email field.
-3. Report: the default range is the current month, so it may be empty. Click **All time**: the cards and the table fill in. Sort a column, change the status, pick a `from` date later than `to` to see the error.
+2. Employees: 13 rows over 2 pages (6 departments are created from the seed data). Search "eng", sort a column, add, edit and delete an employee. Adding a duplicate email shows an error on the Email field.
+3. Report: the default range is the current month, so it may be empty. Click **All time**: the cards, the department bars, the hires-by-month bars and the table fill in. Sort a column, change the status, pick a `from` date later than `to` to see the error.
 4. Exports: **Export Excel** gives a sheet with a frozen header and real dates; **Export PDF** gives a title, filters, table and a page footer.
 5. Sign out, log in as `viewer` / `Viewer@123`: no Add, Edit or Delete buttons, and Report still works.
 6. Visit http://localhost:4200/employees while signed out: you are sent to the login page.
@@ -94,7 +95,9 @@ catch { $_.Exception.Response.StatusCode.value__ }
 | Report page is empty | The default range is the current month and the seed hire dates are older. Click **All time**. |
 | First Maven run is slow or fails | It downloads dependencies (Spring, POI, OpenPDF). Check the internet connection and retry. |
 | `npm run build` fails fetching fonts | The production build inlines the Google font and needs internet. `npm start` does not. |
+| `Found non-empty schema(s) ... without schema history table` | The database was created by an older version (Hibernate). Run `DROP DATABASE roster_db;` and restart the backend. |
 | Seed data looks old after code changes | The seeder only runs on empty tables. Run `DROP DATABASE roster_db;` in MySQL and restart the backend. |
+| `Flyway ... newer than this version of Flyway` warning | A warning only; the migration still runs. |
 | Everything signs out after 30 minutes | By design: the token lasts 30 minutes and the idle timer signs out after 30 minutes without activity. |
 
 ## 6. How the project was built (order)
@@ -103,4 +106,6 @@ catch { $_.Exception.Response.StatusCode.value__ }
 3. Report: summary endpoint and cards, then the filtered paged table, then Excel export, then PDF export.
 4. Tests: report service, Excel and PDF builders, and MockMvc tests for 400, 401, 403, 404 and 409.
 5. Improvements: seeder cleanup, the 409 handler reports the real field, `IdleService` extracted.
-6. Docs and AI usage log. Every AI use is recorded in `AI_USAGE_LOG.md`.
+6. Database design: a `departments` table with a foreign key from employees, and the schema as a Flyway SQL migration instead of `ddl-auto=update`.
+7. Hires-per-month aggregation in the report summary.
+8. Docs and AI usage log. Every AI use is recorded in `AI_USAGE_LOG.md`.

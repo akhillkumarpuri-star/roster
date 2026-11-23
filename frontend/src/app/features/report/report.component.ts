@@ -96,6 +96,23 @@ function toIso(d: Date): string {
             </ul>
           }
         </div>
+
+        <div class="dept">
+          <h2>Hires by month</h2>
+          @if (s.byMonth.length === 0) {
+            <p class="muted">No hires in this range.</p>
+          } @else {
+            <ul>
+              @for (m of s.byMonth; track m.month) {
+                <li>
+                  <span class="name">{{ monthLabel(m.month) }}</span>
+                  <span class="bar"><span class="fill" [style.width.%]="(m.count / maxMonth(s)) * 100"></span></span>
+                  <span class="num">{{ m.count }}</span>
+                </li>
+              }
+            </ul>
+          }
+        </div>
       }
 
       <div class="table-wrap">
@@ -151,6 +168,7 @@ function toIso(d: Date): string {
     .card strong { font-size: 2rem; letter-spacing: -0.02em; }
     .card.main { background: var(--teal-soft); border-color: transparent; }
     .card.main strong { color: var(--teal); }
+    .dept + .dept { margin-top: 16px; }
     .dept { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px; }
     .dept h2 { margin: 0 0 12px; font-size: 1.05rem; }
     ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
@@ -223,6 +241,16 @@ export class ReportComponent implements OnInit {
         this.error.set(`Could not export to ${kind === 'pdf' ? 'PDF' : 'Excel'}. Please try again.`);
       },
     });
+  }
+
+  /** 'yyyy-MM' -> 'Mar 2024'. Built from numbers, so no time-zone shift. */
+  protected monthLabel(m: string): string {
+    const [y, mm] = m.split('-').map(Number);
+    return new Date(y, mm - 1, 1).toLocaleString('en', { month: 'short', year: 'numeric' });
+  }
+
+  protected maxMonth(s: ReportSummary): number {
+    return Math.max(1, ...s.byMonth.map((m) => m.count));
   }
 
   protected statusLabel(s: EmployeeStatus): string { return STATUS_LABEL[s]; }

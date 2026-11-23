@@ -1,7 +1,9 @@
 package com.example.roster;
 
+import com.example.roster.domain.Department;
 import com.example.roster.domain.Employee;
 import com.example.roster.domain.EmployeeStatus;
+import com.example.roster.repo.DepartmentRepository;
 import com.example.roster.repo.EmployeeRepository;
 import com.example.roster.service.EmployeeService;
 import com.example.roster.web.ApiExceptions;
@@ -29,6 +31,7 @@ import static org.mockito.Mockito.*;
 class EmployeeServiceTest {
 
     @Mock EmployeeRepository repo;
+    @Mock DepartmentRepository departments;
     @InjectMocks EmployeeService service;
 
     private EmployeeRequest request(String email) {
@@ -46,6 +49,7 @@ class EmployeeServiceTest {
     @Test
     void create_normalisesEmailAndSaves() {
         when(repo.existsByEmailIgnoreCase("ada@x.com")).thenReturn(false);
+        when(departments.findByNameIgnoreCase("Engineering")).thenReturn(Optional.of(new Department("Engineering")));
         when(repo.save(any(Employee.class))).thenAnswer(i -> i.getArgument(0));
         EmployeeResponse res = service.create(request("  Ada@X.com "));
         assertEquals("ada@x.com", res.email());
@@ -81,5 +85,39 @@ class EmployeeServiceTest {
         verify(repo).search(eq(""), captor.capture());
         assertEquals(50, captor.getValue().getPageSize());
         assertEquals(Sort.by(Sort.Direction.DESC, "lastName"), captor.getValue().getSort());
+    }
+
+    @Test
+    void create_reusesAnExistingDepartment_notCreatingADuplicate() {
+        when(repo.existsByEmailIgnoreCase("ada@x.com")).thenReturn(false);
+        when(departments.findByNameIgnoreCase("Engineering")).thenReturn(Optional.of(new Department("Engineering")));
+        when(repo.save(any(Employee.class))).thenAnswer(i -> i.getArgument(0));
+
+        EmployeeResponse res = service.create(request("ada@x.com"));
+
+        assertEquals("Engineering", res.department());
+        verify(departments, never()).save(any());
+    }
+
+    @Test
+    void create_createsTheDepartmentWhenItDoesNotExistYet() {
+        when(repo.existsByEmailIgnoreCase("ada@x.com")).thenReturn(false);
+        when(departments.findByNameIgnoreCase("Engineering")).thenReturn(Optional.empty());
+        when(departments.save(any(Department.class))).thenAnswer(i -> i.getArgument(0));
+        when(repo.save(any(Employee.class))).thenAnswer(i -> i.getArgument(0));
+
+        EmployeeResponse res = service.create(request("ada@x.com"));
+
+        assertEquals("Engineering", res.department());
+        verify(departments).save(any(Department.class));
+    }
+
+    @Test
+    void list_sortsByDepartmentThroughTheRelation() {
+        when(repo.search(eq(""), any(Pageable.class))).thenReturn(Page.empty());
+        service.list(null, 0, 10, "department", "asc");
+        ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(repo).search(eq(""), captor.capture());
+        assertEquals(Sort.by(Sort.Direction.ASC, "department.name"), captor.getValue().getSort());
     }
 }

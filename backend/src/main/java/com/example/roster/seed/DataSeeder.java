@@ -1,8 +1,10 @@
 package com.example.roster.seed;
 
 import com.example.roster.domain.AppUser;
+import com.example.roster.domain.Department;
 import com.example.roster.domain.Employee;
 import com.example.roster.domain.EmployeeStatus;
+import com.example.roster.repo.DepartmentRepository;
 import com.example.roster.repo.EmployeeRepository;
 import com.example.roster.repo.UserRepository;
 import org.springframework.boot.ApplicationArguments;
@@ -17,11 +19,14 @@ import java.time.LocalDate;
 public class DataSeeder implements ApplicationRunner {
     private final UserRepository users;
     private final EmployeeRepository employees;
+    private final DepartmentRepository departments;
     private final PasswordEncoder encoder;
 
-    public DataSeeder(UserRepository users, EmployeeRepository employees, PasswordEncoder encoder) {
+    public DataSeeder(UserRepository users, EmployeeRepository employees, DepartmentRepository departments,
+                      PasswordEncoder encoder) {
         this.users = users;
         this.employees = employees;
+        this.departments = departments;
         this.encoder = encoder;
     }
 
@@ -52,8 +57,10 @@ public class DataSeeder implements ApplicationRunner {
     private void add(String first, String last, String dept, String title, String hired,
                      EmployeeStatus status, String phone) {
         Employee e = new Employee();
+        Department department = departments.findByNameIgnoreCase(dept)
+                .orElseGet(() -> departments.save(new Department(dept)));
         e.update(first, last, (first + "." + last + "@roster.example").toLowerCase(), phone,
-                dept, title, LocalDate.parse(hired), status);
+                department, title, LocalDate.parse(hired), status);
         employees.save(e);
     }
 }

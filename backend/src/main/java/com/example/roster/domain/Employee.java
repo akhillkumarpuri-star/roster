@@ -24,8 +24,10 @@ public class Employee {
     @Column(nullable = false, length = 30)
     private String phone;
 
-    @Column(nullable = false, length = 80)
-    private String department;
+    // Many employees belong to one department (foreign key employees.department_id).
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "department_id", nullable = false, foreignKey = @ForeignKey(name = "fk_employee_department"))
+    private Department department;
 
     @Column(name = "job_title", nullable = false, length = 100)
     private String jobTitle;
@@ -43,7 +45,7 @@ public class Employee {
     @PrePersist
     void onCreate() { createdAt = LocalDateTime.now(); }
 
-    public void update(String firstName, String lastName, String email, String phone, String department,
+    public void update(String firstName, String lastName, String email, String phone, Department department,
                        String jobTitle, LocalDate hireDate, EmployeeStatus status) {
         this.firstName = firstName;
         this.lastName = lastName;
@@ -60,7 +62,7 @@ public class Employee {
     public String getLastName() { return lastName; }
     public String getEmail() { return email; }
     public String getPhone() { return phone; }
-    public String getDepartment() { return department; }
+    public Department getDepartment() { return department; }
     public String getJobTitle() { return jobTitle; }
     public LocalDate getHireDate() { return hireDate; }
     public EmployeeStatus getStatus() { return status; }

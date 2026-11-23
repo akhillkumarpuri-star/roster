@@ -26,12 +26,14 @@ export const STATUS_LABEL: Record<EmployeeStatus, string> = {
 export const DEPARTMENTS = ['Engineering', 'Design', 'Product', 'Finance', 'HR', 'Operations', 'Sales'];
 
 export interface DepartmentCount { department: string; count: number; }
+export interface MonthCount { month: string; count: number; } // month = 'yyyy-MM'
 export interface ReportSummary {
   from: string; // yyyy-MM-dd
   to: string;
   total: number;
   byStatus: Record<EmployeeStatus, number>;
   byDepartment: DepartmentCount[];
+  byMonth: MonthCount[];
 }
 export interface ReportFilter { from: string; to: string; status: EmployeeStatus | ''; }
 export type SortDir = 'asc' | 'desc';

@@ -122,4 +122,43 @@ class ReportServiceTest {
         assertEquals(ReportService.EXPORT_LIMIT + 1L, e.totalMatching());
         assertEquals("ACTIVE", e.statusLabel());
     }
+
+    @Test
+    void summary_returnsHiresPerMonthOldestFirst() {
+        when(repo.countByMonth(any(), any(), any()))
+                .thenReturn(rows(new Object[][]{{2023, 11, 1L}, {2024, 3, 2L}}));
+
+        ReportSummary s = service.summary(LocalDate.of(2023, 1, 1), LocalDate.of(2024, 12, 31), null);
+
+        assertEquals(2, s.byMonth().size());
+        assertEquals("2023-11", s.byMonth().get(0).month());
+        assertEquals(1L, s.byMonth().get(0).count());
+        assertEquals("2024-03", s.byMonth().get(1).month());
+        assertEquals(2L, s.byMonth().get(1).count());
+    }
+
+    @Test
+    void summary_keepsOnlyTheMostRecentMonths() {
+        Object[][] many = new Object[30][];
+        for (int i = 0; i < 30; i++) many[i] = new Object[]{2000 + i, 1, 1L};   // 2000-01 ... 2029-01
+        when(repo.countByMonth(any(), any(), any())).thenReturn(rows(many));
+
+        ReportSummary s = service.summary(LocalDate.of(1990, 1, 1), LocalDate.of(2030, 1, 1), null);
+
+        assertEquals(ReportService.MAX_MONTHS, s.byMonth().size());
+        assertEquals("2006-01", s.byMonth().get(0).month());          // the 6 oldest were dropped
+        assertEquals("2029-01", s.byMonth().get(ReportService.MAX_MONTHS - 1).month());
+    }
+
+    @Test
+    void list_sortsByDepartmentThroughTheRelation() {
+        when(repo.report(any(), any(), any(), any(Pageable.class))).thenReturn(Page.empty());
+
+        service.list(LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), null, 0, 10, "department", "asc");
+
+        ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(repo).report(any(), any(), any(), captor.capture());
+        assertEquals(Sort.by(Sort.Direction.ASC, "department.name").and(Sort.by(Sort.Direction.ASC, "id")),
+                captor.getValue().getSort());
+    }
 }
