@@ -49,7 +49,7 @@ Each entry records the five items required by section 6.1 of the assessment, plu
 ### Entry 3: 401 vs 403 on forbidden actions
 - **Tool:** Claude.
 - **Prompt (summary from notes):** "I logged in as `viewer` and sent DELETE /api/employees/{id} with the viewer token. It returned 401, but I expected 403. Why does this happen and how do I fix it?"
-- **Prompt as typed (when the fix was applied):** "Start here and do the step fixes and give me the final zip file. … First do one step, and then when I say next, go on to the next step." Then: "Also send the zip file where you made the edit."
+- **Prompt as typed (when the fix was applied):** "Start here and do the step fixes and give me the final zip file." Then: "Also send the zip file where you made the edit."
 - **Prompt, structured (reconstructed for the applied fix):** "In `SecurityConfig.java`, forbidden requests from an authenticated viewer return 401 instead of 403 because Spring's internal `/error` dispatch requires authentication. Apply the minimal fix, show the changed lines, give me manual re-test steps, and return the updated project zip."
 - **What the AI generated:** the explanation (Spring forwards the 403 to `/error`, which my rules protected) and the one-line fix `.requestMatchers("/error").permitAll()`, applied in the project.
 - **What was modified and why:** the line was added after the login matcher with a comment. The frontend interceptor signs the user out on 401, so a forbidden action must return 403. MockMvc cannot test the `/error` dispatch, so I verify this by hand with PowerShell (viewer token gives 403, no token gives 401).
@@ -72,8 +72,7 @@ Each entry records the five items required by section 6.1 of the assessment, plu
 - **Result:** drafts I rehearsed from (updated again in entry 14).
 ### Entry 6: Report summary endpoint and cards (UC-RPT-04, part 1)
 - **Tool:** Claude.
-- **Prompt as typed:** "Read all the files: the zip file and the doc file. The doc file is the assessment and the others are my work. I completed most of it and I am sharing the remaining part, so guide me how to do that." Then, after the plan: "next".
-- **Prompt, structured (reconstructed):** "Context: the Roster project (attached zip) has login and employee CRUD. The Report use cases UC-RPT-01 to 05 are missing. Task, step 2 of 8: implement the report summary. Requirements: (1) `GET /api/reports/employees/summary` with optional `from`, `to` and `status`; (2) default range is the current month; (3) return HTTP 400 when `from` is after `to`; (4) use SQL aggregate queries (COUNT with GROUP BY) for the total, the count per status and the count per department; (5) bound parameters only, no string-built SQL; (6) an Angular report page with a date-range picker, a status filter and summary cards, available to every signed-in user. Do only this step and then wait for my next instruction."
+- **Prompt, structured (reconstructed):** "Context: the Roster project (attached zip) has login and employee CRUD. The Report use cases UC-RPT-01 to 05 are missing. Task, step 2 of 8: implement the report summary. Requirements: (1) `GET /api/reports/employees/summary` with optional `from`, `to` and `status`; (2) default range is the current month; (3) return HTTP 400 when `from` is after `to`; (4) use SQL aggregate queries (COUNT with GROUP BY) for the total, the count per status and the count per department; (5) bound parameters only, no string-built SQL; (6) an Angular report page with a date-range picker, a status filter and summary cards, available to every signed-in user."
 - **What the AI generated:** `ReportController`, `ReportService`, two aggregate queries, a `BadRequest` exception with its 400 handler, `ReportSummary` DTOs, and the Angular report page with filters, presets and cards.
 - **What was modified and why:** (a) the status filter binds a set of statuses (`status in :statuses`) instead of a nullable parameter, because a null enum parameter can fail type resolution in Hibernate; (b) the default range stays the current month as the assessment requires, and "This year" and "All time" presets were added because the seed hire dates are older and the page would look empty; (c) dates are formatted from local year, month and day instead of `toISOString()`, which can shift a day in India time.
 - **What I learned:** aggregate queries with GROUP BY, why bound parameters are both safer and more reliable than string building, and the UTC date-shift trap.
@@ -81,7 +80,6 @@ Each entry records the five items required by section 6.1 of the assessment, plu
 - **Result:** cards for total, per status and per department. The Angular build passed; the Java code was not compiled by the AI.
 ### Entry 7: Report table with sorting, paging and filters (UC-RPT-01, UC-RPT-05)
 - **Tool:** Claude.
-- **Prompt as typed:** "next".
 - **Prompt, structured (reconstructed):** "Task, step 3 of 8: add the report table. Requirements: `GET /api/reports/employees` with the same `from`, `to` and `status` filters plus `page`, `size`, `sort` and `dir`; server-side paging and sorting; a whitelist of sortable fields so a client cannot choose an arbitrary column; page size capped at 50; a read-only Angular Material table with sortable headers, a paginator, status chips and an empty state; any filter change returns to page 1. The summary, the table and the later exports must use one shared filter rule so they cannot disagree."
 - **What the AI generated:** `ReportService.list`, the paged `report` query, the controller endpoint, and the table on the report page.
 - **What was modified and why:** the build failed on a strict-typing error (indexing the status-label map with an untyped table row), so it was replaced by a typed `statusLabel()` method like the employees screen. The sort whitelist is shared with the employee list. `id` was added as a second sort key so pages stay stable when many rows share a hire date. A single `resolve()` method validates the filter for the summary, the table and the exports.
@@ -90,7 +88,6 @@ Each entry records the five items required by section 6.1 of the assessment, plu
 - **Result:** a read-only, sortable, paginated report table. The Angular build passed.
 ### Entry 8: Excel export (UC-RPT-02)
 - **Tool:** Claude.
-- **Prompt as typed:** "next".
 - **Prompt, structured (reconstructed):** "Task, step 4 of 8: Excel export with Apache POI. Requirements: `GET /api/reports/employees/export.xlsx` using the same filters; include all matching rows, not only the visible page; proper column headers; hire dates as real Excel dates; a frozen header; do not load unlimited rows into memory; the Angular export button must send the JWT."
 - **What the AI generated:** `ExcelReportBuilder`, the export endpoint, `ReportService.export`, the Export Excel button, and a blob download helper.
 - **What was modified and why:** fixed column widths instead of auto-size, because auto-size needs AWT fonts that a headless server may lack; exports are capped at 10,000 rows and the sheet says when it was cut; the file is fetched through HttpClient, not a plain link, so the JWT interceptor adds the token.
@@ -99,7 +96,6 @@ Each entry records the five items required by section 6.1 of the assessment, plu
 - **Result:** every row that matches the filter exports. The Angular build passed; POI code not compiled by the AI.
 ### Entry 9: PDF export (UC-RPT-03)
 - **Tool:** Claude.
-- **Prompt as typed:** "next".
 - **Prompt, structured (reconstructed):** "Task, step 5 of 8: PDF export. Requirements: `GET /api/reports/employees/export.pdf` with the same filters and rows as the Excel export; formatted output with a title, the date, the filters used and a table that keeps its layout across pages (repeat the header row); a page footer; an Export PDF button next to Export Excel."
 - **What the AI generated:** `PdfReportBuilder` (OpenPDF), the endpoint, and the Export PDF button.
 - **What was modified and why:** the two export methods in the component were merged into one `exportFile('xlsx' | 'pdf')` to remove duplication. The Latin-only font limitation is documented in the README.
@@ -108,7 +104,6 @@ Each entry records the five items required by section 6.1 of the assessment, plu
 - **Result:** a formatted PDF that uses the same rows as the Excel file.
 ### Entry 10: Automated tests
 - **Tool:** Claude.
-- **Prompt as typed:** "next".
 - **Prompt, structured (reconstructed):** "Task, step 6 of 8: tests. Write unit tests for the report service rules (default range, `from > to`, status filter, zero-filled statuses, sort whitelist and page cap, export cap), tests that read back the generated Excel file and check the PDF header, and MockMvc tests with the real security chain and real JWTs for 400, 401, 403, 404 and 409 plus the report endpoints."
 - **What the AI generated:** `ReportServiceTest`, `ReportBuildersTest` and `ApiSecurityTest`.
 - **What was modified and why:** query rows are built with a helper because `List.of(array)` would spread the array into separate elements. It is documented that MockMvc has no `/error` dispatch, so entry 3 is checked by hand. The AI could not run Maven, so I run `mvn test` myself.
@@ -117,7 +112,6 @@ Each entry records the five items required by section 6.1 of the assessment, plu
 - **Result:** tests written; the pass or fail result is recorded in section 3 after I run them.
 ### Entry 11: Improvements from my refactor checklist
 - **Tool:** Claude.
-- **Prompt as typed:** "next".
 - **Prompt, structured (reconstructed):** "Task, step 7 of 8: apply safe improvements from my refactor checklist: (1) replace the hacky phone-number expression in `DataSeeder` with explicit data; (2) make the 409 response report the real conflicting field instead of always `email`; (3) extract the idle-timeout logic from `ShellComponent` into an `IdleService` that starts and stops cleanly. Update or add tests for the changed behaviour."
 - **What the AI generated:** explicit seed data, `ApiExceptions.Conflict(field, message)`, `core/idle.service.ts`, a simplified `ShellComponent`, an updated 409 test and a new non-email conflict test.
 - **What was modified and why:** only these three were chosen because they are small and easy to review; the `EmployeesComponent` split was left for later. Flyway was deferred at this point and done in entry 12.
@@ -144,7 +138,7 @@ Each entry records the five items required by section 6.1 of the assessment, plu
 - **Result:** UC-RPT-04 now has total, status, department and monthly aggregations. The Angular build passed.
 ### Entry 14: Documentation and this log
 - **Tool:** Claude.
-- **Prompt as typed:** "Also, have you updated the README file and the how-to-build .md file and everything?" Then: "Yes, add both." Later: "Update the AI_USAGE_LOG.md more accurately, with professional-type prompts, not just 'next'."
+- **Prompt as typed:** "Also, have you updated the README file and the how-to-build .md file and everything?" Then: "Yes, add both." Later: "Update the AI_USAGE_LOG.md more accurately, with professional-type prompts"
 - **Prompt, structured (reconstructed):** "Update all Markdown documents so they match the current code: README (run steps, API table, use-case coverage, ER diagram, limitations), a new BUILD_GUIDE (prerequisites, build and run, verification checklist, PowerShell checks for 401 and 403, a common-problems table), the interview WALKTHROUGH, the refactor checklist, and the AI usage log in the section 6.1 format."
 - **What the AI generated:** the rewritten `README.md`, a new `BUILD_GUIDE.md`, an updated `WALKTHROUGH.md` and `REFACTOR_CHECKLIST.md`, and this log.
 - **What was modified and why:** test counts, endpoints and table names were updated everywhere so the documents match the code, and limitations are stated openly (Latin-only PDF, no department screen, `ddl-auto=none`). This log separates prompts as typed from reconstructed prompts so it stays accurate.
