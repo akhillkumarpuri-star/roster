@@ -150,17 +150,17 @@ Only tick an item when it is really finished and I have checked it myself. Updat
 **Done by me**
 - [x] Installed Java, Maven, Node and MySQL Server and got the app running locally
 - [x] Tested login, wrong password, search, sort, paging, add, edit and delete
+- [x] `DROP DATABASE roster_db;` then `mvn spring-boot:run`: Flyway creates the schema and the seeder fills it
+- [x] 409 handler, `IdleService` and `DataSeeder` cleanup checked
+- [x] Employees screen works after the department change (add with a new department, sort by department)
 - [x] Tested the API with and without a token and found the 401 vs 403 problem
 
 **Code applied (AI-drafted). Tick each one only after I have run it and read the code**
 - [x] `/error` fix: viewer token on DELETE gives 403, no token gives 401 (re-test by hand)
-- [x] `DROP DATABASE roster_db;` then `mvn spring-boot:run`: Flyway creates the schema and the seeder fills it
 - [x] `mvn test` passes with 40 tests
-- [x] Employees screen works after the department change (add with a new department, sort by department)
 - [x] Report page works in the browser: cards, department bars, hires by month, table, sorting, paging, filters
 - [x] Excel export opens with the right rows, a frozen header and real date cells
 - [x] PDF export opens with the title, filters, table and page footer
-- [x] 409 handler, `IdleService` and `DataSeeder` cleanup checked
       
 ## 4. How I would describe it in the interview
 "AI generated the initial template for both applications, and later, at my request and step by step, the report module (summary, table, Excel and PDF export), the extra tests, a departments table with a foreign key and a Flyway schema, and the documentation. I set up the environment, ran and tested the first version, and found that forbidden requests returned 401 instead of 403. I reviewed the generated code, ran the tests and the app, and I can explain each part. Every use of AI is in this log with the prompt, what was generated, what was modified and why, and what I learned."
