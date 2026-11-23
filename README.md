@@ -14,12 +14,12 @@ Small full-stack app for the Application Developer skill assessment.
 | Tests | JUnit 5, Mockito, Spring MockMvc (40 tests) |
 
 ## Prerequisites
-Java 17+, Maven 3.9+, Node 20+ (npm), MySQL 8 (or Docker). The first backend start downloads the Maven dependencies, so it needs internet.
+Java 17+, Maven 3.9+, Node 22 LTS (npm), MySQL 8. Angular 19 supports Node 20 and 22 only, so do not use Node 24 or newer. The first backend start downloads the Maven dependencies, so it needs internet.
 
 ## Run it
 ```bash
-# 1. Database (skip if you already run MySQL with root/root)
-docker compose up -d
+# 1. Database: MySQL 8 running on port 3306 with user root / password root.
+#    The backend creates the roster_db database by itself on first start.
 
 # 2. Backend  ->  http://localhost:8080
 cd backend
@@ -34,7 +34,7 @@ Different MySQL credentials? `DB_USER=... DB_PASSWORD=... mvn spring-boot:run`.
 Always set a real `JWT_SECRET` (32+ chars) outside local development.
 
 ## Build and run from scratch (Windows PowerShell or any shell)
-1. **Check the tools** (each should print a version): `java -version` (17+), `mvn -v` (3.9+), `node -v` (20+), `npm -v`, and MySQL 8 running on port 3306.
+1. **Check the tools** (each should print a version): `java -version` (17+), `mvn -v` (3.9+), `node -v` (22.x), `npm -v`, and MySQL 8 running on port 3306.
 2. **Backend:** `cd backend`, then `mvn test` (40 tests), then `mvn spring-boot:run`. The first run downloads dependencies and creates the `roster_db` database and the demo data. Wait for `Started RosterApplication`.
 3. **Frontend:** open a second terminal, `cd frontend`, `npm install`, `npm start`. Open http://localhost:4200.
 4. **First-run checks:** log in as `admin` / `Admin@123`; the Employees page shows 13 people; open **Report** and click **All time** to see the cards and the table; try both export buttons.
@@ -107,16 +107,16 @@ Error shape: `{ "message": "...", "errors": { "field": "message" } }`.
 ## Use-case coverage
 | ID | Status | Where |
 |---|---|---|
-| UC-LOGIN-01/02 | Done | `features/login`, `AuthController`, `JwtService` |
+| UC-LOGIN-01/02 | Done | `features/login`, `AuthController`, `JwtService`. After login the user lands on the Employees page, which serves as the dashboard |
 | UC-LOGIN-03 | Partial | username remembered; token refresh not built |
-| UC-LOGIN-04 | Done | `core/idle.service.ts` (warning at 28 min, logout at 30) |
+| UC-LOGIN-04 | Done, with a limitation | `core/idle.service.ts` (warning at 28 min, logout at 30). The JWT also expires 30 min after login and is not refreshed, so an active user is signed out at that point too |
 | UC-TXN-01..06 | Done | `features/employees`, `EmployeeService`; search debounced 300 ms |
 | UC-RPT-01 | Done | `features/report` table, `ReportService.list` (server-side paging and sorting, date and status filters) |
 | UC-RPT-02 | Done | `ExcelReportBuilder`, `GET /api/reports/employees/export.xlsx` |
 | UC-RPT-03 | Done | `PdfReportBuilder`, `GET /api/reports/employees/export.pdf` (title, date, table, page footer) |
 | UC-RPT-04 | Done | summary cards: total, per status, per department, and hires per month (SQL COUNT + GROUP BY, `year()`/`month()`) |
 | UC-RPT-05 | Done | date-range picker, default current month, presets, server rejects from > to |
-| UC-LOGOUT-01/02 | Done | `AuthService.logout`, `authGuard`, interceptor 401 handling |
+| UC-LOGOUT-01/02 | Done | `AuthService.logout`, `authGuard`, interceptor 401 handling. Optional backend token invalidation is not built |
 
 ## Tests
 `cd backend && mvn test` runs 40 tests: employee and report service rules, JWT, the Excel and PDF builders,
