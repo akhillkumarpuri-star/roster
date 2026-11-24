@@ -84,7 +84,7 @@ class EmployeeServiceTest {
         ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
         verify(repo).search(eq(""), captor.capture());
         assertEquals(50, captor.getValue().getPageSize());
-        assertEquals(Sort.by(Sort.Direction.DESC, "lastName"), captor.getValue().getSort());
+        assertEquals(Sort.by(Sort.Direction.DESC, "lastName").and(Sort.by(Sort.Direction.ASC, "id")), captor.getValue().getSort());
     }
 
     @Test
@@ -118,6 +118,6 @@ class EmployeeServiceTest {
         service.list(null, 0, 10, "department", "asc");
         ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
         verify(repo).search(eq(""), captor.capture());
-        assertEquals(Sort.by(Sort.Direction.ASC, "department.name"), captor.getValue().getSort());
+        assertEquals(Sort.by(Sort.Direction.ASC, "department.name").and(Sort.by(Sort.Direction.ASC, "id")), captor.getValue().getSort());
     }
 }

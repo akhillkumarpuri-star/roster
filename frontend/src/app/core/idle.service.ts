@@ -39,6 +39,7 @@ export class IdleService {
     clearTimeout(this.warnTimer);
     clearTimeout(this.idleTimer);
     this.lastReset = Date.now();
+    this.auth.touch();
     this.warnTimer = setTimeout(
       () => this.snack.open('You will be signed out in 2 minutes due to inactivity.', 'Stay signed in', { duration: 120000 }),
       WARN_MS,

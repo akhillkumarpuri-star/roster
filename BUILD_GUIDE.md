@@ -64,7 +64,7 @@ Run the jar with real secrets: `JWT_SECRET` (32+ characters), `DB_USER`, `DB_PAS
 ## 4. Check that everything works
 1. Open http://localhost:4200 and log in as `admin` / `Admin@123`. A wrong password shows a red message.
 2. Employees: 13 rows over 2 pages (7 departments are created from the seed data). Search "eng", sort a column, add, edit and delete an employee. Adding a duplicate email shows an error on the Email field.
-3. Report: the default range is the current month, so it may be empty. Click **All time**: the cards, the department bars, the hires-by-month bars and the table fill in. Sort a column, change the status, pick a `from` date later than `to` to see the error.
+3. Report: the default range is the current month, which shows 2 seeded hires. Click **All time**: all 13 employees appear in the cards, the department bars, the hires-by-month bars and the table. Sort a column, change the status, pick a `from` date later than `to` to see the error.
 4. Exports: **Export Excel** gives a sheet with a frozen header and real dates; **Export PDF** gives a title, filters, table and a page footer.
 5. Sign out, log in as `viewer` / `Viewer@123`: no Add, Edit or Delete buttons, and Report still works.
 6. Visit http://localhost:4200/employees while signed out: you are sent to the login page.
@@ -96,13 +96,13 @@ catch { $_.Exception.Response.StatusCode.value__ }
 | Windows on ARM (for example Snapdragon laptops) | Download the ARM64 build of Node. MySQL has no Windows ARM build, so install the normal x64 MySQL; Windows runs it under emulation. An x64 JDK also works the same way. |
 | Port 8080 or 4200 already in use | Stop the other program using it, or change `server.port` / `ng serve --port 4300` (if you change the frontend port, also change `app.cors.allowed-origin`). |
 | Login works but the page shows CORS errors | The frontend must run on http://localhost:4200, or `app.cors.allowed-origin` must match. |
-| Report page is empty | The default range is the current month and the seed hire dates are older. Click **All time**. |
+| Report page is empty | The database was seeded by an older version with fixed hire dates. Run `DROP DATABASE roster_db;` and restart the backend. |
 | First Maven run is slow or fails | It downloads dependencies (Spring, POI, OpenPDF). Check the internet connection and retry. |
 | `npm run build` fails fetching fonts | The production build inlines the Google font and needs internet. `npm start` does not. |
 | `Found non-empty schema(s) ... without schema history table` | The database was created by an older version (Hibernate). Run `DROP DATABASE roster_db;` and restart the backend. |
 | Seed data looks old after code changes | The seeder only runs on empty tables. Run `DROP DATABASE roster_db;` in MySQL and restart the backend. |
 | `Flyway ... newer than this version of Flyway` warning | A warning only; the migration still runs. |
-| Everything signs out after 30 minutes | By design: the token lasts 30 minutes and the idle timer signs out after 30 minutes without activity. |
+| Signed out after 30 minutes | By design: the idle timer signs out after 30 minutes without activity. The token itself lasts 8 hours. |
 
 ## 6. How the project was built (order)
 1. Template: backend (entities, repositories, DTOs, services, controllers, JWT security, seeder, tests) and frontend (login, shell, employees, dialogs).

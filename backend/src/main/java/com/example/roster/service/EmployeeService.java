@@ -38,7 +38,7 @@ public class EmployeeService {
     public PageResponse<EmployeeResponse> list(String q, int page, int size, String sort, String dir) {
         String sortField = SORTABLE.contains(sort) ? sort : "lastName";
         Sort.Direction direction = "desc".equalsIgnoreCase(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-        var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50), Sort.by(direction, sortProperty(sortField)));
+        var pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 50), Sort.by(direction, sortProperty(sortField)).and(Sort.by(Sort.Direction.ASC, "id")));
         Page<Employee> result = repo.search(q == null ? "" : q.trim(), pageable);
         return new PageResponse<>(result.getContent().stream().map(EmployeeResponse::from).toList(),
                 result.getTotalElements(), result.getNumber(), result.getSize());

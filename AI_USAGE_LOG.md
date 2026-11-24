@@ -1,269 +1,269 @@
 # AI Usage Log: Roster (Employee Management)
 
-## 1\. Overview
+Nov 23, 2026 · @akhil
 
-|Item|Detail|
-|-|-|
-|Tool|Claude (claude.ai). No other AI tool was used.|
-|Prompts|Entries 1 and 12 are copied exactly. For the other entries I did not keep a copy of the prompts at the time, so they are reconstructed from memory and from the code that came back, and are marked "reconstructed".|
-|Stack|Angular 19, Spring Boot 3.3 (Java 17), MySQL 8|
-|What AI produced|The initial application template, the report module, most of the tests, the departments and Flyway change, the hires-per-month aggregation, and first drafts of the documentation|
-|What I did|Set up the environment on Windows 11, ran and tested every feature, found the 401 vs 403 defect, chose which improvements to make, ran the test suite, and verified the exports and the database changes on my own MySQL|
-|How I checked AI output|Read the generated code, ran `mvn test`, tested every use case in the browser, and tested the API with and without a token in PowerShell|
+## 1. Overview
 
-**How this was built:** AI-assisted, human-directed. I chose the domain and scope, broke the work into steps and directed each one, and Claude generated the code for each step. I set up and ran everything, tested every feature, found the 401 vs 403 bug myself, decided which improvements to make and which to skip, checked the result against the assessment, and verified it all on my own MySQL setup.
+| Item | Detail |
+|---|---|
+| AI tool | Claude (claude.ai) only |
+| Stack | Angular 19, Spring Boot 3.3 (Java 17), MySQL 8 |
+| What Claude wrote | Most of the code: backend, Angular screens, Flyway migration, report module, Excel and PDF exports, most of the tests, first drafts of the README and BUILD_GUIDE |
+| What I did | Chose the domain and scope, wrote the prompts, ran and tested everything on my own Windows machine and MySQL, rejected or redirected Claude's output where it was wrong or too big, and checked the result against the brief |
+| How I reviewed output | Read the code before accepting it, ran `mvn test`, tested every use case in the browser, and called the API with and without tokens from PowerShell |
 
-## 2\. Summary
+## 2. Summary
 
-|#|Area|AI role|My role|Outcome|
-|-|-|-|-|-|
-|1|Reading the assessment and planning|Summarised the doc, proposed a plan|Chose a different domain|Plan adapted|
-|2|Application template|Generated backend, frontend, 9 tests|Installed, ran and tested it|Working baseline|
-|3|Duplicate-email logic|Found a raw vs stored email mismatch|Requested the review|Fixed before first commit|
-|4|401 instead of 403|Explained the cause, gave a one-line fix|Found the bug, re-tested by hand|Fixed and verified|
-|5|Windows environment setup|Explained each error|Ran every fix myself|Toolchain working|
-|6|Report summary and filters|Generated endpoint, queries, page|Tested in the browser|UC-RPT-04 (part), UC-RPT-05|
-|7|Report table|Generated paged, sorted table|Tested sorting, paging, filters|UC-RPT-01|
-|8|Excel export|Generated Apache POI builder|Opened and checked the file|UC-RPT-02|
-|9|PDF export|Generated OpenPDF builder|Opened and checked the file|UC-RPT-03|
-|10|Automated tests|Generated 25 tests|Ran `mvn test`|All passing|
-|11|Refactors|Applied 3 changes|Chose which 3 from its suggestions|Applied and checked|
-|12|Review of my repo against the assessment|Found gaps and doc problems|Requested it, decided what to fix|Entries 13 and 14|
-|13|Departments table, FK, Flyway|Generated schema, code and 4 tests|Ran it on MySQL 8|Database design improved|
-|14|Hires per month|Generated query, DTO, UI, tests|Checked it on the report page|UC-RPT-04 complete|
-|15|Documentation|Drafted README and BUILD\_GUIDE|Checked them against the code|Docs match the code|
+| # | Area | What Claude gave me | What I changed or caught | Result |
+|---|---|---|---|---|
+| 1 | Planning | A plan for an Invoices domain with refresh tokens and Swagger | Switched to Employee Management; cut refresh tokens and Swagger | Smaller, finishable scope |
+| 2 | Baseline app | Full backend, frontend, 8 tests | Nothing yet; installed and tested it | Working baseline |
+| 3 | Schema | Department stored as a plain string | Asked for a departments table with a foreign key | Better database design |
+| 4 | Auth | JWT, filter, SecurityConfig | Accepted after a line-by-line walkthrough | Working login |
+| 5 | Employee API | CRUD, paging, 409 on duplicates | Set the page size cap and sort whitelist | Working API |
+| 6 | Angular auth | Login, interceptor, guard | Accepted; tested in browser | Working auth flow |
+| 7 | Screens | Table, dialog, debounced search | Accepted; tested every action | Working screens |
+| 8 | Bug | Duplicate check used the raw email | I found it; Claude fixed it | Fixed, plus a test |
+| 9 | Bug | SecurityConfig turned 403 into 401 | I found it in PowerShell | One-line fix, retested |
+| 10 | Report summary | Summary endpoint and cards | Specified the filter rules | UC-RPT-04 (part), UC-RPT-05 |
+| 11 | Report table | Paged, sorted table; added an id tie-breaker unasked | Asked why the tie-breaker was there; tested paging | UC-RPT-01 |
+| 12 | Excel export | POI builder: frozen header, date cells, 10,000 row cap | Chose backend POI over browser SheetJS | UC-RPT-02 |
+| 13 | PDF export | OpenPDF builder: repeating header, page footer | Checked the licence: OpenPDF (LGPL/MPL) over iText 7 (AGPL) | UC-RPT-03 |
+| 14 | Tests | 25 tests (service, builders, real security chain) | Ran the suite and checked the counts | 40 tests passing |
+| 15 | Review | 3 refactors; missed UC-RPT-04 aggregation | Picked 3 of 5 refactors; found the gap | UC-RPT-04 complete |
+| 16 | Docs | README and BUILD_GUIDE drafts | Corrected what didn't match the code and my machine | Docs match code |
+| 17 | Fixes | Relative seed dates, id tie-breaker | Found both in my own review | UC-RPT-05 and UC-TXN-01 fixed |
 
-## 3\. Detailed entries
+## 3. Detailed entries
 
-### Entry 1: Reading the assessment and planning
+### Entry 1: Planning
 
-**Tool:** Claude
+**Prompt 1:** I attached the assessment document
 
-**Prompt:** I attached the assessment document and my notes from the recruiter call, then asked:
+**Prompt 2:** Here's the brief. I'm building Employee Management because email gives a natural unique field for UC-TXN-05. My plan: users, departments and employees tables, JWT valid for 30 minutes, admin and viewer roles, exports done on the backend. Check my plan against the scoring table and tell me what I've missed. Don't write code yet.
 
-> check everything about the assessment here
+**What Claude gave me:** First, a summary of the 17 use cases and a full plan for an Invoices domain, with refresh tokens and Swagger. Then, reviewing my plan, it confirmed the tables and roles and flagged three things: the AI log is worth 15%, UC-RPT-04 needs a date-based aggregation, and UC-LOGIN-03 and UC-LOGOUT-01 have optional parts.
 
-> okay now tell everythign relating both
+**What I changed and why:** I rejected the Invoices plan. Employee Management is suggested in the brief, has an obvious unique field, and was small enough to finish properly. I dropped refresh tokens and Swagger to protect time for the required use cases.
 
+**What I learned:** Read the scoring table before planning. The log alone is worth more than testing and documentation combined.
 
+### Entry 2: Baseline application
 
-**What the AI generated:** a summary of all 17 use cases and the scoring weights, and a full project plan for an Invoices / Accounts Receivable domain (roles, customers and invoices tables, refresh tokens, Swagger).
+**Prompt:** Build a small full-stack app for this assessment (doc attached). Angular 19 standalone with Angular Material, Spring Boot 3, MySQL. Domain is Employee Management. Login with JWT and BCrypt, admin and viewer roles, employee CRUD with server-side paging, sorting, debounced search, an add/edit dialog, delete confirmation, and client and server validation. Add unit tests and a README.
 
-**What I changed and why:** I chose Employee Management instead of Invoices. The assessment suggests it, it has a clear unique field (email) for the duplicate-check use case, and it kept the scope small enough to finish properly. I did not build the refresh token or Swagger parts of the plan.
+**What Claude gave me:** The whole baseline: Spring Boot entities, repositories, DTO records, services, controllers, the JWT filter, SecurityConfig, exception handling and a data seeder; 8 unit tests; and the Angular routes, auth service, interceptor, guard, login page, shell, employee table and dialogs.
 
-**What I learned:** reading the scoring table first showed me that the AI usage log is worth 15%, so it had to be kept properly and not written at the end.
+**What I changed and why:** Nothing at this point. I wanted a running baseline before judging it.
 
-\---
+**How I checked:** Installed the toolchain on my Windows machine (the problems I hit are listed in BUILD_GUIDE under common problems), ran both apps, and tested login, a wrong password, search, sort, paging, add, edit, delete, and the API with and without a token. That testing turned up Entries 8 and 9.
 
-### Entry 2: Application template
+**What I learned:** How one request travels from the Angular form through the interceptor, JWT filter, controller, service and repository to MySQL.
 
-**Tool:** Claude
+After the baseline worked, I reviewed it one layer at a time (Entries 4 to 7). Each entry shows the requirement that produced that layer and what I checked; for security I also asked for a line-by-line explanation.
 
-**Prompt :** Build a small full-stack app for this assessment (doc attached). Angular 19 standalone with Angular Material, Spring Boot 3, MySQL. Domain is Employee Management. Login with JWT and BCrypt, admin and viewer roles, employee CRUD with server-side paging, sorting, debounced search, an add/edit dialog, delete confirmation, and client and server validation. Add unit tests and a README.
+### Entry 3: Schema
 
-**What the AI generated:** the Spring Boot backend (entities, repositories, DTO records, services, controllers, JWT filter and `JwtService`, `SecurityConfig`, exception handling, a data seeder) with 9 unit tests (`EmployeeServiceTest`, `JwtServiceTest`), and the Angular frontend (routes, auth service, interceptor, guard, login page, shell, employee table, add/edit dialog, confirm dialog).
+**Prompt 1:** Propose a MySQL schema for Employee Management with login users and admin/viewer roles. Explain why each table, constraint and index is there. Don't write any Java yet.
 
-**What I did:** installed the toolchain (entry 5), ran both applications, and tested login, a wrong password, search, sorting, paging, add, edit, delete, and the API with and without a token. This testing found the defect in entry 4.
+**What Claude gave me:** users and employees tables, with department as a VARCHAR column on employees, a unique key on email, NOT NULL columns, a CHECK on status, and indexes on (hire_date, status) and last_name.
 
-**What I learned:** how a request moves from the Angular form through the interceptor, the JWT filter, the controller, the service and the repository to MySQL, and that the server-side role check, not the hidden buttons, is what actually protects the data.
+**Prompt 2:** Why is department a plain string and not its own table? The rubric grades relationships, so use a departments table with a foreign key. Also explain the index on last_name. Then put the final schema in a Flyway migration (not ddl-auto) and generate the entities and repositories only.
 
-\---
+**What I changed and why:** I rejected department as a string. Typos would create fake departments, and the rubric grades relationships. I also asked for Flyway instead of ddl-auto so the schema is versioned SQL I can read.
 
-### Entry 3: Duplicate-email logic
+**Result:** `V1__create_schema.sql` with a departments table (case-insensitive unique name), `fk_employee_department`, CHECK constraints on status and role, and ddl-auto set to none. A find-or-create method keeps the API sending department names, so the screens didn't change. 4 new tests.
 
-**Tool:** Claude
+**How I checked:** Dropped my old roster_db, let Flyway build the schema on MySQL 8, added an employee with a new department, and sorted by department.
 
-**Prompt:** Review EmployeeService create and update for logic bugs, especially the duplicate email check.
+**What I learned:** A foreign key makes the database itself reject bad data, instead of trusting the code to.
 
-**What the AI generated:** it pointed out that the duplicate check used the raw email while the saved value was trimmed and lowercased, so `" Ada@X.com"` could get past the check. It changed the service so one `normalise()` method feeds both the check and the stored value.
+### Entry 4: Authentication
 
-**What I did:** asked for the review and kept the database unique constraint `uk\_employee\_email` as the final guard. This fix went in before my first commit, so it is already in the earliest version of `EmployeeService` in the repo.
+**Source:** generated by the Entry 2 prompt.
 
-**What I learned:** a validation must check exactly the value that gets stored. The service check gives a friendly message; the unique constraint is what stops two simultaneous requests.
+**Requirements I checked it against:** JWT HS256 with a 30-minute expiry, BCrypt, the role as a claim, stateless, and the filter placed before UsernamePasswordAuthenticationFilter.
 
-**Files:** `EmployeeService.java`, `EmployeeServiceTest.java`
+**Review question:** Explain what each line of SecurityConfig does.
 
-\---
+**What Claude gave me:** JwtService, JwtAuthFilter, SecurityConfig (stateless, CSRF off, CORS for localhost:4200, a 401 entry point, method security), the BCrypt encoder, `POST /api/auth/login`, and the line-by-line explanation. In the code the roles are ADMIN and USER; the seeded read-only account is named viewer.
 
-### Entry 4: Viewer got 401 instead of 403
+**What I changed and why:** Accepted as generated. I asked for the walkthrough. One line in it turned out to be incomplete; see Entry 9.
 
-**Tool:** Claude
+**How I checked:** Logged in as admin and as viewer, tried a wrong password, and sent requests with and without a token.
 
-**Prompt:** I logged in as viewer and called DELETE /api/employees/1 with the viewer token from PowerShell. I get 401 but I expected 403. Here is my SecurityConfig. Why is this happening and how do I fix it?
+**What I learned:** What each part of the security chain does, and why the JWT filter has to run before UsernamePasswordAuthenticationFilter.
 
-**What the AI generated:** an explanation that Spring forwards the access-denied error to `/error`, and `/error` itself required authentication, so the 403 turned into a 401. The fix was `.requestMatchers("/error").permitAll()` in `SecurityConfig`.
+### Entry 5: Employee API
 
-**What I did:** I found the problem myself while testing in PowerShell: a viewer token on `DELETE /api/employees/{id}` returned 401. This mattered because the Angular interceptor logs the user out on any 401, so a viewer clicking a forbidden action would have been signed out. After the fix I re-tested by hand: viewer token gave 403, no token gave 401. MockMvc does not perform the `/error` dispatch, so this cannot be covered by `ApiSecurityTest`.
+**Requirements I gave:** Paging with a maximum page size of 50, sorting limited to these fields: firstName, lastName, email, department, jobTitle, hireDate, status, 409 on a duplicate email, and one error format: `{message, errors}`.
 
-**What I learned:** 401 means not authenticated, 403 means authenticated but not allowed, and Spring Security also runs on internal error dispatches.
+**What Claude gave me:** EmployeeController with `@PreAuthorize` ADMIN on writes, EmployeeService with the sort whitelist and page cap, DTO records, a single exception handler, and a seeder with 2 accounts and 13 employees.
 
-**Files:** `SecurityConfig.java`
+**What I changed and why:** The page cap and the sort whitelist were my requirements. The sort field comes from the client, so unchecked it's an error risk.
 
-\---
+**How I checked:** Called every endpoint as admin and as viewer; checked paging, sorting and the 409.
 
-### Entry 5: Windows 11 environment setup
+### Entry 6: Login, interceptor and guard
 
-**Tool:** Claude
+**Source:** generated by the Entry 2 prompt. I reviewed it against UC-LOGIN-01, UC-LOGIN-02 and UC-LOGOUT-02.
 
-**Prompt:** I'm on Windows 11. mvn is not recognized after installing, MySQL Workbench is installed but there is no server, an old MySQL data folder asks for a root password, and curl doesn't work in PowerShell. Screenshots attached. How do I fix each one?
+**What Claude gave me:** a standalone login component with a reactive form (username at least 3 characters, password at least 6, an error message for each rule, submit disabled while the form is invalid or a request is in flight, and a "Remember my username" checkbox); AuthService (session in localStorage, token expiry read from the JWT, remembered username); authInterceptor, which attaches the token to API calls and logs out on a 401 except on the login call itself; and authGuard, which also rejects an expired token. All protected routes are lazy loaded under one guarded shell.
 
-Later I moved to a new Windows 11 laptop with an ARM processor and asked (reconstructed): I have a new laptop with nothing installed. How do I install and run this project on Windows from scratch?
+**What I changed and why:** Accepted as generated. I checked the validators against UC-LOGIN-02 and the guard against UC-LOGOUT-02.
 
-**What the AI generated:** a fix for each error I hit: PATH not updated after installing, MySQL Server missing while only Workbench was installed, an old MySQL data folder asking for an unknown root password, and `curl` not behaving as expected in PowerShell. On the new laptop: PowerShell blocking `npm` (execution policy), Maven not on PATH, `JAVA\_HOME` not set, and which builds to use on Windows ARM (ARM64 Node; x64 MySQL, which has no ARM build and runs under emulation). It also pointed out that Angular 19 needs Node 20 or 22, not the newer version nodejs.org offers by default.
+**How I checked:** Validation messages, login, logout, an expired token, and typing a protected URL with no session.
 
-**What I did:** ran every command myself and confirmed each tool with `java -version`, `mvn -v`, `node -v` and a MySQL login. Current versions: Java 17.0.21, Maven 3.10.2, Node 22 LTS, MySQL 8.0.46. I added these problems to the BUILD\_GUIDE common-problems table.
+### Entry 7: Employee screens
 
-**What I learned:** how PATH and `JAVA\_HOME` work on Windows, and that MySQL Server runs as a Windows service separate from Workbench.
+**Source:** generated by the Entry 2 prompt. I reviewed it against UC-TXN-01 to UC-TXN-06.
 
-\---
+**What Claude gave me:** EmployeesComponent (Material table with server-side paging and sorting, search debounced at 300 ms with a clear button, clicking a row opens the edit dialog for admins, and the actions column and add button shown only to admins); EmployeeDialogComponent (email and phone validation, no future hire dates, server 400 and 409 errors mapped onto the matching field); ConfirmDialogComponent; and snackbar notifications for add, edit, delete and load errors.
 
-### Entry 6: Report summary and filters (UC-RPT-04 part 1, UC-RPT-05)
+**What I changed and why:** Accepted as generated. EmployeesComponent is larger than I'd like; I chose not to split it (see Entry 15).
 
-**Tool:** Claude
+**How I checked:** Paging, sorting, search, clearing the search, add, edit, delete, a duplicate email, and confirmed a viewer sees no write buttons and can't open the edit dialog.
+
+**What I learned:** Hiding buttons is only cosmetic. The server-side role check is what protects the data.
+
+### Entry 8: Bug in Claude's duplicate-email check
+
+**Prompt:** Adding ' Ada@X.com' with a leading space got past the duplicate check, but the database stored it trimmed. Why, and what's the cleanest fix?
+
+**What was wrong:** Claude's EmployeeService checked for duplicates using the raw input but saved a trimmed, lowercased value, so the check and the database were looking at different strings.
+
+**What Claude gave me:** One `normalise()` method used by both the check and the save, plus a unit test.
+
+**What I changed and why:** I kept the database unique constraint `uk_employee_email` as the final guard. The service check gives a friendly message, but only the constraint stops two simultaneous requests.
+
+**What I learned:** Validate exactly the value you store.
+
+### Entry 9: Bug in Claude's SecurityConfig: viewer got 401 instead of 403
+
+**How I found it:** I called `DELETE /api/employees/1` from PowerShell with the viewer token and expected 403. I got 401. I turned on the security debug log and saw the 403 being forwarded to /error and then rejected as unauthenticated.
+
+**Prompt:** The debug log shows my 403 gets forwarded to /error and then rejected as unauthenticated. Why does /error need authentication, and what's the minimal fix?
+
+**What Claude gave me:** The cause (Spring Security also runs on the internal /error dispatch, and the generated config didn't permit it) and the fix: `.requestMatchers("/error").permitAll()`. It also pointed out that MockMvc doesn't perform that forward, so a MockMvc test can't catch this. A full server test (`@SpringBootTest` with a random port) would.
+
+**Why it mattered:** The interceptor from Entry 6 logs out on any 401. A viewer clicking a forbidden action would have been signed out.
+
+**How I checked:** Retested by hand: the viewer token now gives 403, and no token gives 401.
+
+**What I learned:** 401 means "who are you?" and 403 means "I know you, and no." Also, tests passing didn't mean the security was right.
+
+### Entry 10: Report summary and filters (UC-RPT-04 part 1, UC-RPT-05)
 
 **Prompt:** Now add the report module step by step. First the summary: an endpoint with from, to and status filters, default to the current month, 400 if from is after to, COUNT and GROUP BY by status and by department, and an Angular report page with date pickers, a status filter and summary cards.
 
-**What the AI generated:** `ReportController`, `ReportService`, COUNT and GROUP BY queries for totals by status and by department, a 400 response when `from` is after `to`, a default range of the current month, and the Angular report page with date pickers, a status filter, presets and summary cards. While drafting it also: bound statuses as a set (`status in :statuses`) to avoid a Hibernate null-parameter problem, zero-filled missing statuses so no card disappears, and built date strings from local year, month and day instead of `toISOString()`, which shifts the date back a day in India time.
+**What Claude gave me:** ReportController, ReportService with a `resolve()` filter method, the two GROUP BY queries, zero-filled status counts so no card disappears, the 400 check, and the Angular page with This month, This year and All time presets. It built date strings from the local year, month and day instead of `toISOString()`.
 
-**What I did:** tested the cards, the presets and the `from` after `to` error in the browser. The default current-month view is empty with the seed data, so I use the "All time" preset when demonstrating it.
+**Follow-up I asked:** "Why did you bind status as a set (`status in :statuses`) instead of a nullable parameter?" Answer: Hibernate handles a null parameter in that pattern unreliably; a set of all statuses means "no filter" without any null.
 
-**What I learned:** aggregate queries with GROUP BY, and that `toISOString()` converts to UTC, so date-only values should never go through it.
+**What I changed and why:** Accepted as generated.
 
-**Files:** `ReportController`, `ReportService`, `EmployeeRepository`, `ApiExceptions`, `ApiExceptionHandler`, `Dtos`, `features/report/report.component.ts`, `core/report.service.ts`
+**How I checked:** Cards, presets, and the from-after-to error in the browser.
 
-\---
+**Problem I found:** the seed data has no hires in the current month, so the default view is empty. Fixed in Entry 17.
 
-### Entry 7: Report table (UC-RPT-01)
+**What I learned:** `toISOString()` converts to UTC, which shifts a date back a day in India time. Date-only values should never go through it without removing the timezone offset first, which is what the employee dialog's `todayIso()` does.
 
-**Tool:** Claude
+### Entry 11: Report table (UC-RPT-01)
 
-**Prompt :** Next the report table. Same filters, server-side paging and sorting with a sort whitelist, a page size cap, and a read-only Material table. The summary, the table and the exports should all use the same filter logic.
+**Prompt:** Next the report table. Same filters, server-side paging and sorting with a sort whitelist, a page size cap, and a read-only Material table. The summary, the table and the exports should all use the same filter logic.
 
-**What the AI generated:** the paged, sorted report query and endpoint, and a read-only Material table with sortable headers and a paginator. It reused the employee list's sort whitelist (making it package-visible), capped page size at 50, added `id` as a second sort key so pages stay stable when hire dates repeat, and put all filter validation in one `resolve()` method shared by the summary, the table and the exports.
+**What Claude gave me:** the paged, sorted report query and endpoint, and a read-only Material table with sortable headers and a paginator. It reused the employee sort whitelist (making it package-visible) and the page cap of 50, put all filter validation in one `resolve()` method shared by the summary, the table and the exports, and added id as a second sort key without being asked.
 
-**What I did:** tested sorting on every column, paging, and that changing a filter returns to page 1.
+**What I changed and why:** Accepted as generated. I asked why the extra id sort was there: rows with equal sort values have no guaranteed order, so the database can return them differently on each page query, and a row can appear on two pages or on none. A unique tie-breaker fixes the order.
 
-**What I learned:** why a tie-breaker sort key is needed for stable paging, and why sharing one filter method keeps the cards, table and exports from disagreeing.
+**How I checked:** Sorted every column, paged through, and confirmed that changing a filter goes back to page 1.
 
-\---
+**What I learned:** Stable paging needs a unique tie-breaker in the sort, and sharing one filter method keeps the summary cards, the table and the exports from disagreeing.
 
-### Entry 8: Excel export (UC-RPT-02)
-
-**Tool:** Claude
+### Entry 12: Excel export (UC-RPT-02)
 
 **Prompt:** Add Excel export with Apache POI. All filtered rows, not just the current page, proper headers, real date cells and a frozen header. The download button has to send the JWT.
 
-**What the AI generated:** `ExcelReportBuilder` (Apache POI) with a title, the filters used, a bold frozen header, filter arrows, real date cells and fixed column widths (auto-size needs fonts a headless server may not have); a 10,000-row cap noted in the file; and a download that goes through `HttpClient` as a blob so the interceptor attaches the JWT. A plain link would have no token and return 401.
+**What Claude gave me:** ExcelReportBuilder with a title, the filters used, a bold frozen header with filter arrows, real date cells, fixed column widths (auto-sizing needs fonts a headless server may not have) and a 10,000 row cap. The download goes through HttpClient as a blob.
 
-**What I did:** exported with different filters and opened the files in Excel to check the rows, the frozen header and that dates sort as dates.
+**What I changed and why:** Accepted as generated. I chose backend export with POI over SheetJS in the browser because the filters already run on the server, so the file always matches the report, and the browser never needs every row.
 
-**What I learned:** a download from a protected API has to go through `HttpClient`, not a normal link.
+**How I checked:** Exported with different filters and opened each file in Excel: right rows, frozen header, and dates sorting as dates.
 
-**Files:** `pom.xml`, `ExcelReportBuilder`, `ReportService`, `ReportController`, `core/download.ts`
+**What I learned:** A plain download link sends no token and gets 401. Protected downloads have to go through HttpClient so the interceptor adds the JWT.
 
-\---
-
-### Entry 9: PDF export (UC-RPT-03)
-
-**Tool:** Claude
+### Entry 13: PDF export (UC-RPT-03)
 
 **Prompt:** Add PDF export with the same rows as Excel: title, date, the filters used, a table header that repeats on every page, and a page footer.
 
-**What the AI generated:** `PdfReportBuilder` (OpenPDF) with landscape A4, a title, the generated date, the filters, a header row that repeats on every page and a page-number footer, plus one shared `exportFile('xlsx' | 'pdf')` method in the component.
+**What Claude gave me:** PdfReportBuilder using OpenPDF: landscape A4, title, generated date, the filters used, a header row repeated on every page, and a page number footer. One shared `exportFile('xlsx' | 'pdf')` method in the component handles both downloads.
 
-**What I did:** opened the PDF and checked the title, filters, table and footer across pages.
+**What I changed and why:** Accepted as generated. I checked the library choice: iText 7 is AGPL or commercial, which would put licence obligations on the whole application, while OpenPDF is LGPL/MPL, so it was the right pick.
 
-**What I learned:** the built-in PDF font is Latin only, so non-Latin names would not render. This is listed in the README limitations.
+**How I checked:** Opened multi-page PDFs and checked the title, filters, and the header and footer on every page.
 
-\---
+**What I learned:** The built-in PDF font is Latin only, so non-Latin names won't render. Listed in the README limitations.
 
-### Entry 10: Automated tests
-
-**Tool:** Claude
+### Entry 14: Automated tests
 
 **Prompt:** Write tests for the report service and the Excel and PDF builders, plus MockMvc tests with the real security chain for 400, 401, 403, 404 and 409.
 
-**What the AI generated:** 25 tests: `ReportServiceTest` (7), `ReportBuildersTest` (5, reading back the generated Excel and PDF) and `ApiSecurityTest` (13, MockMvc with the real security chain and real JWTs for 400, 401, 403, 404 and 409).
+**What Claude gave me:** 25 tests: ReportServiceTest (7; 1 department and 2 monthly tests were added to the same file later, 10 in total), ReportBuildersTest (5, reading the generated Excel and PDF files back) and ApiSecurityTest (13, through the real security chain with real JWTs).
 
-**What I did:** ran `mvn test`. The AI could not run Maven in its environment, so my run was the first real execution.
+**What I did:** Ran `mvn test` on the full suite. Claude couldn't run Maven, so every test count in this log comes from my own runs.
 
-**What I learned:** mocked service tests do not prove the security rules; tests through the real filter chain do.
+**Test count:** 8 baseline + 1 from Entry 8 + 25 here + 4 department + 2 monthly = 40.
 
-**Files:** `backend/src/test/java/com/example/roster/\*`
+**What I learned:** Tests with a mocked service don't prove the security rules. Only tests through the real filter chain do. Even those have limits: MockMvc doesn't perform the /error dispatch, so the 401 vs 403 bug from Entry 9 can't be caught by ApiSecurityTest, and I tested that case by hand.
 
-\---
+### Entry 15: Review and refactors
 
-### Entry 11: Refactors
+**Prompt:** Here's my refactor checklist: seed phone numbers built from employees.count(), the 409 always reporting email, the idle timer living in ShellComponent, EmployeesComponent too big, all DTOs in one file. Do you agree, which matter most, and apply the ones worth doing now.
 
-**Tool:** Claude
+**What Claude gave me:** Agreement on all five, with the idle timer as the most important because it holds global event listeners. Then the code for three of them.
 
-**Prompt:** What should I improve in this code before submitting? Then apply the seeder phone number fix, make the 409 response return the real field, and move the idle timeout into its own service.
+**What I changed and why:** I chose to apply three small changes and skip two large ones:
 
-**What the AI generated:** a list of improvements, then three of them applied: explicit seed phone numbers instead of an expression built from `employees.count()`, a 409 response that carries the real conflicting field instead of always `email`, and the idle-timeout logic moved out of `ShellComponent` into `IdleService` with activity resets throttled to once a second.
+- Applied: explicit seed phone numbers (the old expression depended on `employees.count()`)
+- Applied: the 409 now gets its field from the service (`Conflict(field, message)`) instead of the exception handler hardcoding email. Email is still the only unique employee field, so it still reports email.
+- Applied: idle logic moved into IdleService, with activity resets throttled to once a second
+- Skipped: splitting EmployeesComponent and splitting the DTO file. Both touch many files, and I didn't want a large refactor late in the project.
 
-**What I did:** chose these three because they were small and easy to review, and left the larger ones (splitting `EmployeesComponent`, splitting the DTO file) for later. Checked a fresh database seed, a duplicate-email 409 in the dialog, and the idle warning and sign-out.
+**How I checked:** A fresh database seed, a duplicate email 409 in the dialog, and the idle warning and sign-out.
 
-**What I learned:** timers and global event listeners belong in a service that can start and stop cleanly, not in a component.
+**Review against the brief:** Checking the report against UC-RPT-04, I found the date-based aggregation was missing. Claude had flagged it in Entry 1 but left it out of the report build in Entry 10. I asked Claude to add it: a hires-per-month query using the same shared filters, oldest month first, limited to the latest 24 months, a 'Hires by month' section on the report page, and 2 tests.
 
-**Files:** `DataSeeder`, `ApiExceptions`, `ApiExceptionHandler`, `EmployeeService`, `idle.service.ts`, `shell.component.ts`
-
-\---
-
-### Entry 12: Departments table, foreign key and Flyway schema
-
-**Tool:** Claude
-
-**Prompt:** Add a departments table with a foreign key from employees, keep the API sending the department name, and move the schema to a Flyway SQL migration with proper constraints and indexes.
-
-**What the AI generated:** a `Department` entity and repository; `Employee.department` as a many-to-one relation with `fk\_employee\_department`; a service method that finds a department by name (ignoring case) or creates it, so the API and screens did not change; sorting and search through `department.name`; an entity graph so the department is loaded in the same query; and a Flyway migration `V1\_\_create\_schema.sql` with primary keys, unique keys, the foreign key, CHECK constraints on status and role, and indexes matched to the queries. `ddl-auto` was set to `none`. It also added 4 tests: 3 in `EmployeeServiceTest` (reusing an existing department, creating a new one, sorting by department) and 1 in `ReportServiceTest` (sorting by department). The AI tested the SQL on MariaDB in its own environment.
-
-**What I did:** dropped my old `roster\_db`, started the backend on my MySQL 8 so Flyway created the schema and the seeder filled it, then added an employee with a new department and sorted by department.
-
-**What I learned:** a one-to-many relationship with a foreign key lets the database itself reject bad data, and Flyway keeps the schema as versioned SQL instead of letting Hibernate guess.
-
-**Files:** `Department`, `DepartmentRepository`, `Employee`, `EmployeeService`, `EmployeeRepository`, `ReportService`, `DataSeeder`, `Dtos`, `pom.xml`, `application.properties`, `db/migration/V1\_\_create\_schema.sql`, tests, README
-
-\---
-
-### Entry 13: Hires per month (UC-RPT-04 part 2)
-
-**Tool:** Claude
-
-**Prompt:** UC-RPT-04 needs date-based aggregations. Add hires per month to the report summary using the same filters and show it on the report page.
-
-**What the AI generated:** a `countByMonth` query (`GROUP BY year(hireDate), month(hireDate)`) using the same filters as the table, a `MonthCount` DTO, a "Hires by month" section on the report page limited to the latest 24 months, and two unit tests for ordering and the limit.
-
-**What I did:** checked the monthly bars with the "All time" and "This year" presets.
-
-**What I learned:** JPQL date functions and grouping by more than one expression.
-
-\---
-
-### Entry 14: Documentation
-
-**Tool:** Claude
+### Entry 16: Documentation
 
 **Prompt:** Update the README and write a build guide so everything matches the current code.
 
-**What the AI generated:** the README (setup, API table, ER diagram, use-case coverage, limitations) and BUILD\_GUIDE (prerequisites, build and run, common problems).
+**What Claude gave me:** the README (setup, API table, ER diagram, use case coverage, limitations) and BUILD_GUIDE (prerequisites, build and run, common problems).
 
-**What I did:** checked the test counts, endpoints, table names and setup steps against the code and against a run on my machine.
+**What I changed and why:** Checked both against the code and against a clean run on my machine, and corrected what didn't match: the department count and MySQL steps, Node 22 LTS instead of the latest Node, the Windows ARM setup problems I hit while installing the toolchain, and the use case status. I also removed docker-compose.yml, because it was never used or tested, and an untested setup path is worse than none.
 
-**What I learned:** documentation that does not match the code is worse than none.
+**How I checked:** Followed BUILD_GUIDE from scratch on my machine and compared test counts, endpoints and table names with the code.
 
-## 4\. Known gaps
+### Entry 17: Fixing three issues found in review
 
-|Item|Requirement|Plan|
-|-|-|-|
-|Token refresh|UC-LOGIN-03 (optional)|Refresh endpoint called before expiry|
-|Active users signed out 30 minutes after login|UC-LOGIN-04|Refresh or reissue the token on activity|
-|Backend token invalidation|UC-LOGOUT-01 (optional)|Token deny-list until expiry|
-|Large `EmployeesComponent`, all DTOs in one file|Code quality|Split the table into its own component, split DTOs by feature|
-|Leading-wildcard search cannot use an index|Performance|FULLTEXT index or prefix search|
+**Prompt:** The default report month is empty because seed hire dates are fixed in the past, the employee list has no id tie-breaker in its sort, and active users are signed out 30 minutes after login (UC-LOGIN-04). Give me the smallest safe fix for each.
 
-## 5\. Reflection
+**What Claude gave me:** Three seed hire dates made relative to today (one last month, two this month); id added as a second sort key in EmployeeService, matching the report; and an 8 hour token as an upper limit, with last activity stored in localStorage so the 30 minute idle rule also holds after the tab is closed.
 
-* **Where AI helped most:** generating a large, consistent codebase quickly, and explaining framework behaviour I had not seen before (entry 4).
-* **Where AI fell short:** it could not run Maven or MySQL, so nothing was proven until I ran it. It did not catch the 401 vs 403 problem; my testing did. It found the requirement gaps only when I asked it to review the repo against the assessment.
-* **What I would do differently:** check the assessment line by line before building, design token lifetime and idle timeout together, and keep this log as I go instead of reconstructing it.
+**What I changed and why:** Accepted the fixes. Adding the tie-breaker broke 2 existing tests that checked the exact sort, so I updated them to expect id as the second key. I also updated the README and BUILD_GUIDE, which still described the old behaviour.
 
+**How I checked:** Ran `mvn test` (40 passing), reset the database, saw 2 hires this month on the report, paged through the employee list sorted by department with no repeated rows, set last activity 31 minutes back in DevTools and reloaded and landed on the login page, then logged in again and stayed in.
+
+## 4. Known limitations
+
+| Gap | Requirement | Why it's open | How I'd fix it |
+|---|---|---|---|
+| EmployeesComponent too large; all DTOs in one file | Code quality | Skipped in Entry 15 as too large a change late on | Split the table into its own component; split DTOs by feature |
+| Search with a leading wildcard can't use an index | Performance | Fine at this data size | FULLTEXT index or prefix search |
+
+## 5. Reflection
+
+**Where Claude helped most:** It wrote a large, consistent codebase quickly, and it explained framework behaviour I hadn't seen before, like Spring Security running on the /error dispatch and Hibernate's trouble with null collection parameters.
+
+**Where it fell short:** Two of the bugs I found were in its own code: the duplicate-email check and the 401/403 config. It was also inconsistent: it added an id tie-breaker to the report table but not to the employee list, which can repeat rows across pages. Fixed in Entry 17. It couldn't run Maven or MySQL, so none of its code was proven until I ran it. And it flagged the UC-RPT-04 date aggregation on day one, then left it out of the first report build; the hires-per-month aggregation was only added near the end.
+
+**What I'd do differently:** Check the brief line by line before building, not at the end. Design the token lifetime and the idle timeout together. Use smaller prompts from the start instead of one prompt for the whole baseline, and ask Claude to review each step against the requirements before moving on.

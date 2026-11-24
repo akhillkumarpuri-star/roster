@@ -109,7 +109,7 @@ Error shape: `{ "message": "...", "errors": { "field": "message" } }`.
 |---|---|---|
 | UC-LOGIN-01/02 | Done | `features/login`, `AuthController`, `JwtService`. After login the user lands on the Employees page, which serves as the dashboard |
 | UC-LOGIN-03 | Partial | username remembered; token refresh not built |
-| UC-LOGIN-04 | Done, with a limitation | `core/idle.service.ts` (warning at 28 min, logout at 30). The JWT also expires 30 min after login and is not refreshed, so an active user is signed out at that point too |
+| UC-LOGIN-04 | Done | `core/idle.service.ts` (warning at 28 min, logout after 30 min idle). Last activity is kept in localStorage, so the rule also applies after the tab is closed. The JWT lasts 8 hours as an upper limit, so active users are not signed out |
 | UC-TXN-01..06 | Done | `features/employees`, `EmployeeService`; search debounced 300 ms |
 | UC-RPT-01 | Done | `features/report` table, `ReportService.list` (server-side paging and sorting, date and status filters) |
 | UC-RPT-02 | Done | `ExcelReportBuilder`, `GET /api/reports/employees/export.xlsx` |
@@ -123,7 +123,7 @@ Error shape: `{ "message": "...", "errors": { "field": "message" } }`.
 and MockMvc tests of the real security chain (400, 401, 403, 404, 409).
 
 ## Security notes
-BCrypt password hashes; stateless JWT (HS256, 30 min); route guard + HTTP interceptor;
+BCrypt password hashes; stateless JWT (HS256, 8 h upper limit); route guard + HTTP interceptor;
 `@PreAuthorize` role checks; Bean Validation on every request body; parameterised JPQL and a sort-field whitelist
 (no string-built SQL); export size capped; CORS limited to http://localhost:4200.
 Known trade-off: the JWT is kept in localStorage as the assessment specifies, which is readable by any XSS.
@@ -134,4 +134,4 @@ Known trade-off: the JWT is kept in localStorage as the assessment specifies, wh
 - Departments are created from the name typed in the employee form (no separate department screen). Two requests creating the same new department at the same moment could hit the unique constraint.
 - `ddl-auto=none` means a mismatch between the entities and the SQL would only show up when a query runs; a production setup would add schema validation or integration tests against MySQL.
 - Search uses a leading-wildcard `LIKE`, which cannot use an index on very large tables.
-- No refresh token; users are signed out after 30 minutes.
+- No refresh token; a session ends after 30 minutes idle or 8 hours total, whichever comes first.
