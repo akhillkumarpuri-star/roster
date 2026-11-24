@@ -9,7 +9,7 @@ For the API, the database design and the use-case coverage, see `README.md`.
 | Java JDK | 17 or newer | `java -version` |
 | Maven | 3.9 or newer | `mvn -v` (must show Java 17+) |
 | Node.js and npm | Node 22 LTS (Angular 19 does not support Node 24 or newer) | `node -v`, `npm -v` |
-| MySQL Server | 8.x, running on port 3306 | `mysql --version`, and the MySQL service is started |
+| MySQL Server | 8.x, running on port 3306 | PowerShell: `Get-Service MySQL*` shows `Running` |
 
 Default database login is `root` / `root`. If yours differs, set `DB_USER` and `DB_PASSWORD` (section 3).
 The first Maven build and the first `npm install` need internet.
@@ -35,6 +35,8 @@ roster/
 
 ## 3. Build and run
 **Database.** Install MySQL 8 and make sure the MySQL service is running on port 3306. On first start the backend creates the `roster_db` database and Flyway runs `backend/src/main/resources/db/migration/V1__create_schema.sql` (tables, foreign key, constraints, indexes). **If you ran an earlier version of this project, run `DROP DATABASE roster_db;` first**, because that older database was created by Hibernate and Flyway will not use it.
+On Windows the `mysql` client is not on PATH by default, so run it by its full path, for example:
+`& "C:\Program Files\MySQL\MySQL Server 8.0\bin\mysql.exe" -u root -proot -e "DROP DATABASE roster_db;"`
 
 **Backend** (terminal 1):
 ```
@@ -61,7 +63,7 @@ Run the jar with real secrets: `JWT_SECRET` (32+ characters), `DB_USER`, `DB_PAS
 
 ## 4. Check that everything works
 1. Open http://localhost:4200 and log in as `admin` / `Admin@123`. A wrong password shows a red message.
-2. Employees: 13 rows over 2 pages (6 departments are created from the seed data). Search "eng", sort a column, add, edit and delete an employee. Adding a duplicate email shows an error on the Email field.
+2. Employees: 13 rows over 2 pages (7 departments are created from the seed data). Search "eng", sort a column, add, edit and delete an employee. Adding a duplicate email shows an error on the Email field.
 3. Report: the default range is the current month, so it may be empty. Click **All time**: the cards, the department bars, the hires-by-month bars and the table fill in. Sort a column, change the status, pick a `from` date later than `to` to see the error.
 4. Exports: **Export Excel** gives a sheet with a frozen header and real dates; **Export PDF** gives a title, filters, table and a page footer.
 5. Sign out, log in as `viewer` / `Viewer@123`: no Add, Edit or Delete buttons, and Report still works.
